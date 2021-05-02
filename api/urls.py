@@ -14,4 +14,6 @@ urlpatterns = [
     path('borracciaPos/<str:id_borraccia>', views.getBorracciaPosizione, name='getBorracciaPosizione'),
     path('borracciaLivello/<str:id_borraccia>', views.getBorracciaLivello, name='getBorracciaLivello'),
     path('registrazione', views.registrazioneUtente, name='registrazioneUtente'),
+    path('login', views.loginUtente, name='loginUtente'),
+    
 ]

@@ -101,7 +101,26 @@ def getBorracciaLivello(request, id_borraccia):
  
 @csrf_exempt
 def registrazioneUtente(request):
-    if request.method == 'POST':
-        print("aaaaaa", request.body)
-        return HttpResponse("ciaaaaaaaaaao")
 
+    if request.method == 'POST':
+
+        data = json.loads(request.body)
+        try:
+            utente = Utente.objects.get(pk=data['username'])
+            return HttpResponse(status=404)
+        except:
+            fabbisogno = (int(data['altezza'])+int(data['peso']))/100
+            utente = Utente(email_utente=data['username'], password=data['password'], lat_utente=40.97938647025624, lon_utente=14.20780902936019, fabbisogno=fabbisogno)
+            utente.save()
+            return HttpResponse(status=200)
+
+@csrf_exempt
+def loginUtente(request):
+
+    if request.method == 'POST':
+        data = json.loads(request.body)
+        try:
+            utente = Utente.objects.get(pk=data['username'], password=data['password'])
+            return HttpResponse(status=200)
+        except:
+            return HttpResponse(status=404)

@@ -5,6 +5,7 @@ class Utente(models.Model):
     lat_utente = models.DecimalField(max_digits=16, decimal_places=14)
     lon_utente = models.DecimalField(max_digits=16, decimal_places=14)
     fabbisogno = models.FloatField()
+    password = models.CharField(max_length=50, default=None)
     #borraccia = models.ForeignKey(Borraccia, on_delete=models.CASCADE)
     #tempo
 
