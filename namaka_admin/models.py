@@ -7,7 +7,7 @@ class Utente(models.Model):
     fabbisogno = models.FloatField()
     password = models.CharField(max_length=50, default=None)
     #borraccia = models.ForeignKey(Borraccia, on_delete=models.CASCADE)
-    #tempo
+    tempo = models.DateTimeField(default=None)
 
 class Borraccia(models.Model):
     id_borraccia = models.CharField(primary_key=True, max_length=2)
@@ -19,4 +19,9 @@ class Borraccia(models.Model):
     utente = models.ForeignKey(Utente, on_delete=models.CASCADE, default=None)
     
 
+class Sorso(models.Model):
+    id_sorso = models.AutoField(primary_key=True)
+    giorno = models.DateField(default=None)
+    totale = models.IntegerField(default=0)
+    utente = models.ForeignKey(Utente, on_delete=models.CASCADE, default=None)
 

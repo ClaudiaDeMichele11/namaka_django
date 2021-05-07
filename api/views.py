@@ -1,12 +1,14 @@
 from django.shortcuts import render
-from namaka_admin.models import Utente, Borraccia
+from namaka_admin.models import Utente, Borraccia, Sorso
 from django.http import HttpResponse
 from django.forms.models import model_to_dict
+from rest_framework.response import Response
 import json
 from django.http import JsonResponse
 from django.core import serializers
 import decimal
 from django.views.decorators.csrf import csrf_exempt
+from datetime import datetime
 
 
 def getInfoUtente(request, email_utente):
@@ -88,17 +90,26 @@ def getBorracciaPosizione(request, id_borraccia):
             return HttpResponse("La borraccia inserita non esiste")
 
             
-
+@csrf_exempt
 def getBorracciaLivello(request, id_borraccia):
     if request.method == 'GET':
         try:
             borraccia = Borraccia.objects.get(pk=id_borraccia)
-            borraccia = Borraccia.objects.get(pk=id_borraccia)
-            livello_borraccia = {'livello:attuale': borraccia.livello_attuale}
+            livello_borraccia = {'livello_attuale': borraccia.livello_attuale}
             return JsonResponse(livello_borraccia)
         except:
             return HttpResponse("La borraccia inserita non esiste")
+    if request.method == 'POST':
+        try:
+            borraccia = Borraccia.objects.get(pk=id_borraccia)
+            data = json.loads(request.body)
+            borraccia.livello_attuale = data['livello_attuale']
+            borraccia.save()
+            return HttpResponse(status=200)    
+        except:
+            return HttpResponse("La borraccia inserita non esiste")
  
+
 @csrf_exempt
 def registrazioneUtente(request):
 
@@ -124,3 +135,71 @@ def loginUtente(request):
             return HttpResponse(status=200)
         except:
             return HttpResponse(status=404)
+
+
+def getAllUser(request):
+    if request.method == 'GET':
+        try:
+            lista_utenti=[]
+            utente = Utente.objects.all()
+            for u in utente:
+                lista_utenti.append(u.email_utente)
+            return JsonResponse({'lista_utenti': lista_utenti})
+        except:
+            return HttpResponse("fallito")
+
+@csrf_exempt
+def postTime(request,email_utente):
+    if request.method == 'POST':
+        data = json.loads(request.body)
+        try:
+            utente = Utente.objects.get(pk=email_utente)
+            utente.tempo = data['tempo']
+            utente.save()
+            return HttpResponse(status=200)
+        except:
+            return HttpResponse(status=405)
+    if request.method == 'GET':
+        try:
+            utente = Utente.objects.get(pk=email_utente)
+            tempo = {'tempo': utente.tempo}
+            return JsonResponse(tempo)
+        except:
+            return HttpResponse("Il tempo non esiste")        
+
+@csrf_exempt
+def sorsi(request, email_utente, giorno):
+    giorno = datetime.strptime(giorno, '%Y-%m-%d')
+    if request.method == 'POST':
+        data = json.loads(request.body)
+        try:
+            sorso = Sorso.objects.all()
+            for s in sorso:
+                if s.giorno == giorno.date() and s.utente.email_utente==email_utente:
+                    s.totale = data['totale']
+                    s.save()
+                    return HttpResponse(status=200)
+            try:
+                utente = Utente.objects.get(pk=email_utente)
+                sorso = Sorso(giorno=giorno.date(), utente=utente, totale=data['totale'])
+            except ValueError:
+                print("erroreeeee", ValueError) 
+            try:
+                sorso.save()
+                return HttpResponse(status=200)
+            except:
+                return HttpResponse(status=405)
+        except:
+            return HttpResponse(status=404)
+    
+    if request.method == 'GET':
+        try:
+            sorso = Sorso.objects.all()
+            for s in sorso:
+                if s.giorno == giorno.date() and s.utente.email_utente==email_utente:
+                    totale = {'totale': s.totale}
+                    return JsonResponse(totale)
+            totale = {'totale': None}
+            return JsonResponse(totale)
+        except:
+            return HttpResponse(status=404)  
