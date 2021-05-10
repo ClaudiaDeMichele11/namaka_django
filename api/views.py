@@ -88,6 +88,18 @@ def getBorracciaPosizione(request, id_borraccia):
             return JsonResponse(pos_borraccia)
         except:
             return HttpResponse("La borraccia inserita non esiste")
+    if request.method == 'POST':
+      data = json.loads(request.body)
+      print(data)
+      print("VADDDDD")
+      try:
+          u = Utente.objects.get(pk=email_utente)
+          print("CIAOOOOOOOOOOO")
+          borraccia = Borraccia(id_borraccia=data['id'], lat_borr=float(data['latitudine']), lon_borr=float(data['longitudine']), capacita=data['capacita'], colore = data['colore'], utente=u)
+          borraccia.save()
+          return HttpResponse(status=200)
+      except:
+          return HttpResponse(status=405)
 
             
 @csrf_exempt
