@@ -74,9 +74,18 @@ def getBorracceUtente(request, email_utente):
         json_stuff={'borracce': lista_borracce}
         return JsonResponse(json_stuff)
 
-    else:
-        print("aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa", request.body)
-        return HttpResponse("ciaaaaaaaaaao")
+    if request.method == 'POST':
+      data = json.loads(request.body)
+      print(data)
+      print("VADDDDD")
+      try:
+          u = Utente.objects.get(pk=email_utente)
+          print("CIAOOOOOOOOOOO")
+          borraccia = Borraccia(id_borraccia=data['id'], lat_borr=float(data['latitudine']), lon_borr=float(data['longitudine']), capacita=data['capacita'], colore = data['colore'], utente=u)
+          borraccia.save()
+          return HttpResponse(status=200)
+      except:
+          return HttpResponse(status=405)
 
         
         
@@ -133,9 +142,10 @@ def registrazioneUtente(request):
             return HttpResponse(status=404)
         except:
             fabbisogno = (int(data['altezza'])+int(data['peso']))/100
-            utente = Utente(email_utente=data['username'], password=data['password'], lat_utente=40.97938647025624, lon_utente=14.20780902936019, fabbisogno=fabbisogno)
+            utente = Utente(email_utente=data['username'], password=data['password'], fabbisogno=fabbisogno)
             utente.save()
             return HttpResponse(status=200)
+    
 
 @csrf_exempt
 def loginUtente(request):
