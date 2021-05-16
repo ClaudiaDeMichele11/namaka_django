@@ -69,8 +69,9 @@ def getBorracceUtente(request, email_utente):
         for b in borraccia:
             if b.utente.email_utente == email_utente:
                 lista_borracce.append(model_to_dict(b))
-            else:
-                return HttpResponse("L'utente inserito non ha borracce associate")
+        if lista_borracce == []:
+            #return HttpResponse("L'utente inserito non ha borracce associate")
+            return JsonResponse({'borracce': lista_borracce})
         json_stuff={'borracce': lista_borracce}
         return JsonResponse(json_stuff)
 
@@ -97,6 +98,18 @@ def getBorracciaPosizione(request, id_borraccia):
             return JsonResponse(pos_borraccia)
         except:
             return HttpResponse("La borraccia inserita non esiste")
+    if request.method == 'POST':
+      data = json.loads(request.body)
+      print(data)
+      print("VADDDDD")
+      try:
+          u = Utente.objects.get(pk=email_utente)
+          print("CIAOOOOOOOOOOO")
+          borraccia = Borraccia(id_borraccia=data['id'], lat_borr=float(data['latitudine']), lon_borr=float(data['longitudine']), capacita=data['capacita'], colore = data['colore'], utente=u)
+          borraccia.save()
+          return HttpResponse(status=200)
+      except:
+          return HttpResponse(status=405)
 
             
 @csrf_exempt
