@@ -69,8 +69,9 @@ def getBorracceUtente(request, email_utente):
         for b in borraccia:
             if b.utente.email_utente == email_utente:
                 lista_borracce.append(model_to_dict(b))
-            else:
-                return HttpResponse("L'utente inserito non ha borracce associate")
+        if lista_borracce == []:
+            #return HttpResponse("L'utente inserito non ha borracce associate")
+            return JsonResponse({'borracce': lista_borracce})
         json_stuff={'borracce': lista_borracce}
         return JsonResponse(json_stuff)
 
