@@ -69,8 +69,9 @@ def getBorracceUtente(request, email_utente):
         for b in borraccia:
             if b.utente.email_utente == email_utente:
                 lista_borracce.append(model_to_dict(b))
-            else:
-                return HttpResponse("L'utente inserito non ha borracce associate")
+        if lista_borracce == []:
+            #return HttpResponse("L'utente inserito non ha borracce associate")
+            return JsonResponse({'borracce': lista_borracce})
         json_stuff={'borracce': lista_borracce}
         return JsonResponse(json_stuff)
 
@@ -141,7 +142,7 @@ def registrazioneUtente(request):
             utente = Utente.objects.get(pk=data['username'])
             return HttpResponse(status=404)
         except:
-            fabbisogno = (int(data['altezza'])+int(data['peso']))/100
+            fabbisogno = (int(float(data['altezza']))+int(float(data['peso'])))/100
             utente = Utente(email_utente=data['username'], password=data['password'], fabbisogno=fabbisogno)
             utente.save()
             return HttpResponse(status=200)
