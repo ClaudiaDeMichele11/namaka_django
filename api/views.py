@@ -142,7 +142,7 @@ def registrazioneUtente(request):
             utente = Utente.objects.get(pk=data['username'])
             return HttpResponse(status=404)
         except:
-            fabbisogno = (int(data['altezza'])+int(data['peso']))/100
+            fabbisogno = (int(float(data['altezza']))+int(float(data['peso'])))/100
             utente = Utente(email_utente=data['username'], password=data['password'], fabbisogno=fabbisogno)
             utente.save()
             return HttpResponse(status=200)
