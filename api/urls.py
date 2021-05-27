@@ -18,7 +18,7 @@ urlpatterns = [
     path('getutenti', views.getAllUser, name='getAllUser'),
     path('postTime/<str:email_utente>', views.postTime, name='postTime'),
     path('sorsi/<str:email_utente>/<str:giorno>', views.sorsi, name='sorsi'),
-    
+    path('grafico/<str:email_utente>/<str:giorno>', views.getInfoGrafico, name='getInfoGrafico'),    
     
     
     

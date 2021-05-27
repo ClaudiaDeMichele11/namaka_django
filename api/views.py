@@ -226,3 +226,22 @@ def sorsi(request, email_utente, giorno):
             return JsonResponse(totale)
         except:
             return HttpResponse(status=404)  
+
+def getInfoGrafico(request, email_utente, giorno):
+    giorno = datetime.strptime(giorno, '%Y-%m-%d')
+    if request.method == 'GET':
+        try:
+            utente = Utente.objects.get(pk=email_utente)
+            fabb = utente.fabbisogno            
+            sorso = Sorso.objects.all()
+            for s in sorso:
+                if s.giorno == giorno.date() and s.utente.email_utente==email_utente:
+                    info = {'info': [{'fabbisogno': fabb, 'totale': s.totale}]}
+                    return JsonResponse(info)
+            info = {'info': [{'fabbisogno': fabb, 'totale': 0}]}
+
+            return JsonResponse(info)            
+        except:
+            info = {'info': [{'fabbisogno': 0, 'totale': 0}]}
+            return JsonResponse(info)
+
