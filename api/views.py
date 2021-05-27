@@ -236,12 +236,12 @@ def getInfoGrafico(request, email_utente, giorno):
             sorso = Sorso.objects.all()
             for s in sorso:
                 if s.giorno == giorno.date() and s.utente.email_utente==email_utente:
-                    info = {'info': [{'fabbisogno': fabb, 'totale': s.totale}]}
+                    info = {'info': [{'fabbisogno': fabb,'totale': s.totale}]}
                     return JsonResponse(info)
-            info = {'info': [{'fabbisogno': fabb, 'totale': 0}]}
+            info = {'info': [{'fabbisogno': fabb,'totale': 0}]}
 
             return JsonResponse(info)            
         except:
-            info = {'info': [{'fabbisogno': 0, 'totale': 0}]}
+            info = {'info': [{'fabbisogno': 0,'totale': 0}]}
             return JsonResponse(info)
 
