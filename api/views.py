@@ -1,5 +1,6 @@
 from django.conf import Settings
 from django.shortcuts import render
+from django.urls.resolvers import URLResolver
 from namaka_admin.models import Utente, Borraccia, Sorso
 from django.http import HttpResponse
 from django.forms.models import model_to_dict
@@ -16,6 +17,18 @@ from django.contrib.auth.models import UserManager, User
 from django.contrib.auth import authenticate
 import jwt
 
+SECRET_KEY = 'django-insecure-fo$-puwh)udlcn!9$acr&1lqa^dy%+0bedu7bu6ju@my+(q^)0'
+def checkToken(request):
+    jwt_token = request.headers.get('authorization', None)     
+    if jwt_token:
+        try:
+            payload = jwt.decode(jwt_token, SECRET_KEY,
+                                 algorithms= 'HS256')
+            print("Token di accesso valido")
+            return 0
+        except (jwt.DecodeError, jwt.ExpiredSignatureError):
+            print("Token di accesso non valido")
+            return 1
 
 def getInfoUtente(request, email_utente):
     if request.method == 'GET':
@@ -29,7 +42,27 @@ def getInfoUtente(request, email_utente):
             return HttpResponse("L'utente inserito non esiste")
         except:
             return HttpResponse("L'utente inserito non esiste")
+
+
+@csrf_exempt
+def refreshToken(request):
+    if request.method == 'POST':
+        print("Aggiorna Token Accesso mediante refresh")
+        data = json.loads(request.body)
+        try:
+            payload = jwt.decode(data["refresh"], SECRET_KEY, algorithms= 'HS256')
+            user = User.objects.get(id=int(payload["user_id"]))
+            access = AccessToken.for_user(user)
+            response = {
+                'access': str(access),
+                }
+            return JsonResponse(response)
+        except:
+            print("Il token di refresh è scaduto")
+            return HttpResponse(status=401)
             
+           
+
 @csrf_exempt
 def PosUtente(request, email_utente):
     if request.method == 'GET':
@@ -47,6 +80,9 @@ def PosUtente(request, email_utente):
         except:
             return HttpResponse("L'utente inserito non esiste")
     if request.method == 'POST':
+        value = checkToken(request)
+        if value == 1 :
+           return HttpResponse(status=401) 
         data = json.loads(request.body)
         print("Data", data)
         return HttpResponse(status=200)
@@ -78,7 +114,7 @@ def getInfoBorraccia(request, id_borraccia):
         except:
             return HttpResponse("La borraccia inserita non esiste")
 
-            
+
 
 @csrf_exempt
 def getBorracceUtente(request, email_utente):
@@ -99,20 +135,9 @@ def getBorracceUtente(request, email_utente):
         return JsonResponse(json_stuff)
 
     if request.method == 'POST':
-        #print(request.headers['Authorization'])
-        #token = AccessToken(request.headers['Authorization'])
-        """
-        token = request.headers['Authorization']
-        jwt_token = request.headers.get('authorization', None)
-        if jwt_token:
-            try:
-                payload = jwt.decode(jwt_token, SECRET_KEY,
-                                     algorithms= 'HS256')
-            except (jwt.DecodeError, jwt.ExpiredSignatureError):
-                return HttpResponse(status=401)
-
-        #print(token)
-        """
+        value = checkToken(request)
+        if value == 1 :
+           return HttpResponse(status=401) 
         data = json.loads(request.body)
         print(data)
         try:
@@ -162,7 +187,6 @@ def registrazioneUtente(request):
         print("data", data)
         try:
             u = User.objects.get(username=data['username'])
-            print("")
             return HttpResponse(status=404)
         except:
             user = User.objects.create_user(data['username'], email=data['username'], password=data['password'])
@@ -170,7 +194,16 @@ def registrazioneUtente(request):
             fabbisogno = (int(float(data['altezza']))+int(float(data['peso'])))/100
             utente = Utente(fabbisogno=fabbisogno, user = user)
             utente.save()
-            return HttpResponse(status=200)
+            refresh = RefreshToken.for_user(user)
+            access = refresh.access_token
+            print("Access token signup", access)
+            print("Refresh token signup", refresh)
+            response = {
+                'refresh': str(refresh),
+                'access': str(access),
+                }
+            return JsonResponse(response)
+
     
 
 @csrf_exempt
@@ -179,9 +212,11 @@ def loginUtente(request):
         data = json.loads(request.body)
         user = authenticate(username=data['username'], password=data['password'])
         if user is not None:
-            print("L'utente e' registrato!")
+            print("L'utente e' registrato!", user)
             refresh = RefreshToken.for_user(user)
-            access = AccessToken.for_user(user)
+            access = refresh.access_token
+            print("Access token login", access)
+            print("Refre token login", refresh)
             response = {
                 'refresh': str(refresh),
                 'access': str(access),
