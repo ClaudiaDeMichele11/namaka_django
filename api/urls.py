@@ -26,7 +26,7 @@ urlpatterns = [
     path('token/', jwt_views.TokenObtainPairView.as_view(), name='token_obtain_pair'),
     path('token/refresh/', views.refreshToken, name='refreshToken'),
     path('api/token/verify/', jwt_views.TokenVerifyView.as_view(), name='token_verify'),
-    
+    path('remove', views.removeBottle, name='removeBottle'),
     
     
 ]

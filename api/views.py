@@ -342,3 +342,20 @@ def getAllPositionBorracce(request, email_utente):
             return JsonResponse({'borracce': 0})
         json_stuff={'borracce': lista_borracce}
         return JsonResponse(json_stuff)
+
+
+@csrf_exempt
+def removeBottle(request):
+    if request.method == 'POST':
+        data = json.loads(request.body)
+        print("data", data)
+        try:
+            borraccia = Borraccia.objects.all()
+            for b in borraccia:
+                print(b.utente)
+                if b.utente.get_username() == data['user'] and b.id_borraccia == data['id_borraccia']:
+                    print("ugualeeee", b)
+                    b.delete()
+                    return HttpResponse(status=200)
+        except:
+            return HttpResponse(status=404)
