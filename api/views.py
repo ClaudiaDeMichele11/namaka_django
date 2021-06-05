@@ -1,7 +1,7 @@
 from django.conf import Settings
 from django.shortcuts import render
 from django.urls.resolvers import URLResolver
-from namaka_admin.models import Utente, Borraccia, Sorso
+from namaka_admin.models import Utente, Borraccia, Sorso, Invito
 from django.http import HttpResponse
 from django.forms.models import model_to_dict
 import json
@@ -16,6 +16,11 @@ from rest_framework_simplejwt.tokens import Token
 from django.contrib.auth.models import UserManager, User
 from django.contrib.auth import authenticate
 import jwt
+
+
+from django.contrib.auth.models import Group
+
+
 
 SECRET_KEY = 'django-insecure-fo$-puwh)udlcn!9$acr&1lqa^dy%+0bedu7bu6ju@my+(q^)0'
 def checkToken(request):
@@ -359,3 +364,120 @@ def removeBottle(request):
                     return HttpResponse(status=200)
         except:
             return HttpResponse(status=404)
+
+@csrf_exempt
+def invita(request):
+    if request.method == 'POST':
+        value = checkToken(request)
+        if value == 1 :
+           return HttpResponse(status=401)
+        data = json.loads(request.body)
+        print(data)
+        try:
+            mittente = User.objects.get(email = data['mittente'])
+            destinatario = User.objects.get(email = data['destinatario'])
+            gruppo = Group.objects.get(name = data['gruppo'])
+            print("ciaooo")
+            
+            invito = Invito.objects.filter(gruppo=gruppo, mittente=mittente, destinatario = destinatario)
+            if len(invito) != 0: 
+                print("aaaaaaaa", invito)
+                return HttpResponse(status=405)
+            else:
+                invito2 = Invito(gruppo=gruppo, mittente=mittente, destinatario = destinatario, stato="NON VISUALIZZATO")
+                invito2.save()
+                return HttpResponse(status=200)
+        except:
+            return HttpResponse(status=405)
+
+def getAllInviti(request, email_utente):
+    if request.method == 'GET':
+        value = checkToken(request)
+        if value == 1 :
+           return HttpResponse(status=401)
+        inviti = Invito.objects.all()
+        lista_inviti = []
+        for i in inviti:
+            invito = {}
+            if i.destinatario.get_username() == email_utente:
+                invito['mittente']= i.mittente.get_username()
+                invito['destinatario']= i.destinatario.get_username()
+                invito['gruppo'] = i.gruppo.name
+                invito['stato'] = i.stato
+                lista_inviti.append(invito)
+        json_stuff={'inviti': lista_inviti}
+        return JsonResponse(json_stuff)
+
+@csrf_exempt
+def modificaStatoInvito(request, email_utente):
+    if request.method == 'POST':
+        """
+        value = checkToken(request)
+        if value == 1 :
+           return HttpResponse(status=401)
+           """
+        data = json.loads(request.body)
+        try:
+            destinatario = User.objects.get(email = email_utente)
+            mittente = User.objects.get(email = data['mittente']) 
+            gruppo = Group.objects.get(name = data['gruppo'])
+            invito = Invito.objects.get(gruppo=gruppo,  mittente=mittente, destinatario = destinatario)
+            invito.stato = data['stato']
+            invito.save()
+            if data['stato'] == "ACCETTATO":
+                gruppo.user_set.add(destinatario)
+            return HttpResponse(status=200)
+        except:
+            return HttpResponse(status=405)
+
+
+@csrf_exempt
+def creaGruppo(request, email_utente):
+    if request.method == 'POST':
+        """value = checkToken(request)
+        if value == 1 :
+           return HttpResponse(status=401)"""
+        data = json.loads(request.body)
+        try:
+            creatore = User.objects.get(email = email_utente)
+            g1 = Group.objects.create(name = data["nomeGruppo"])
+            g1.user_set.add(creatore)
+            return HttpResponse(status=200)
+        except:
+            return HttpResponse(status=405)
+
+def getGruppoByUtente(request, email_utente):
+    if request.method == 'GET':
+        try:
+            value = checkToken(request)
+            if value == 1 :
+                return HttpResponse(status=401)
+            membro = User.objects.get(email = email_utente)
+            query_set = Group.objects.filter(user = membro)
+            lista_gruppi = []
+            for g in query_set:
+                lista_gruppi.append({'nome': g.name})
+            json_stuff={'gruppi': lista_gruppi}
+            return JsonResponse(json_stuff)
+        except:
+            return HttpResponse(status=405)
+
+            
+def getPartecipanti(request, nomegruppo):
+    if request.method == 'GET':
+        try:
+            value = checkToken(request)
+            if value == 1 :
+                return HttpResponse(status=401)
+            utenti = User.objects.filter(groups__name=nomegruppo)
+            print("utentiiii", utenti)
+            lista_partecipanti = []
+            for u in utenti:
+                lista_partecipanti.append({'nome': u.get_username()})
+            json_stuff={'partecipanti': lista_partecipanti}
+            print("listaaaaaa", json_stuff)
+            return JsonResponse(json_stuff)
+
+        except:
+            return HttpResponse(status=405)
+

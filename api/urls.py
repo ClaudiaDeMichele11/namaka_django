@@ -27,6 +27,14 @@ urlpatterns = [
     path('token/refresh/', views.refreshToken, name='refreshToken'),
     path('api/token/verify/', jwt_views.TokenVerifyView.as_view(), name='token_verify'),
     path('remove', views.removeBottle, name='removeBottle'),
-    
+
+
+
+    path('invita', views.invita, name='invita'),
+    path('inviti/<str:email_utente>', views.getAllInviti, name='getAllInviti'),
+    path('modificaStatoInvito/<str:email_utente>', views.modificaStatoInvito, name='modificaStatoInvito'),
+    path('creaGruppo/<str:email_utente>', views.creaGruppo, name='creaGruppo'),
+    path('getGruppoByUtente/<str:email_utente>', views.getGruppoByUtente, name='getGruppoByUtente'),
+    path('getPartecipanti/<str:nomegruppo>', views.getPartecipanti, name='getPartecipanti'),
     
 ]

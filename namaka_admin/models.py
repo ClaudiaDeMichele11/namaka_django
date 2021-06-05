@@ -1,5 +1,5 @@
 from django.db import models
-from django.contrib.auth.models import User
+from django.contrib.auth.models import User, Group
 
 class Utente(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE, null=True)
@@ -26,3 +26,17 @@ class Sorso(models.Model):
     giorno = models.DateField(default=None)
     totale = models.IntegerField(default=0)
     utente = models.ForeignKey(User, on_delete=models.CASCADE, default=None)
+
+
+class Invito(models.Model):
+    class statoInvito(models.TextChoices):
+        VISUALIZZATO = 'VISUALIZZATO', 
+        NON_VISUALIZZATO = 'NON VISUALIZZATO', 
+        ACCETTATO = 'ACCETTATO', 
+        RIFIUTATO = 'RIFIUTATO'
+
+    id_invito = models.AutoField(primary_key=True, default=None)
+    destinatario = models.ForeignKey(User, on_delete=models.CASCADE, default=None, )
+    mittente = models.ForeignKey(User, on_delete=models.CASCADE, default=None, related_name='mittente')
+    stato = models.CharField(choices=statoInvito.choices, default=statoInvito.NON_VISUALIZZATO, max_length=20)
+    gruppo = models.ForeignKey(Group, on_delete=models.CASCADE, null=True)
