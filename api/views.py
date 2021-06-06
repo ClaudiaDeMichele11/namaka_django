@@ -16,7 +16,8 @@ from rest_framework_simplejwt.tokens import Token
 from django.contrib.auth.models import UserManager, User
 from django.contrib.auth import authenticate
 import jwt
-
+from datetime import datetime, timedelta
+import datetime
 
 from django.contrib.auth.models import Group
 
@@ -310,7 +311,7 @@ def sorsi(request, email_utente, giorno):
             return HttpResponse(status=404)  
 
 def getInfoGrafico(request, email_utente, giorno):
-    giorno = datetime.strptime(giorno, '%Y-%m-%d')
+    giorno = datetime.datetime.strptime(giorno, '%Y-%m-%d')
     if request.method == 'GET':
         try:
             utenti=Utente.objects.all()

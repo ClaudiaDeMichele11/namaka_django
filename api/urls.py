@@ -30,6 +30,7 @@ urlpatterns = [
 
 
 
+
     path('invita', views.invita, name='invita'),
     path('inviti/<str:email_utente>', views.getAllInviti, name='getAllInviti'),
     path('modificaStatoInvito/<str:email_utente>', views.modificaStatoInvito, name='modificaStatoInvito'),
