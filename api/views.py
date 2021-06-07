@@ -90,6 +90,12 @@ def PosUtente(request, email_utente):
         if value == 1 :
            return HttpResponse(status=401) 
         data = json.loads(request.body)
+        utenti=Utente.objects.all()
+        for u in utenti:
+            if(u.user.get_username() == email_utente):
+                u.lat_utente = data["latitudine"]
+                u.lon_utente = data["longitudine"]
+                u.save()
         print("Data", data)
         return HttpResponse(status=200)
 
@@ -345,7 +351,7 @@ def getAllPositionBorracce(request, email_utente):
                 lista_borracce.append({"coordinates": {"latitude": float(b.lat_borr), "longitude": float(b.lon_borr)}, "title": b.id_borraccia})
         if lista_borracce == []:
             #return HttpResponse("L'utente inserito non ha borracce associate")
-            return JsonResponse({'borracce': 0})
+            return JsonResponse({'borracce': lista_borracce})
         json_stuff={'borracce': lista_borracce}
         return JsonResponse(json_stuff)
 
