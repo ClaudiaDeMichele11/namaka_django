@@ -16,8 +16,10 @@ from rest_framework_simplejwt.tokens import Token
 from django.contrib.auth.models import UserManager, User
 from django.contrib.auth import authenticate
 import jwt
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, date
 import datetime
+import time
+import operator
 
 from django.contrib.auth.models import Group
 
@@ -473,6 +475,8 @@ def getGruppoByUtente(request, email_utente):
 def getPartecipanti(request, nomegruppo):
     if request.method == 'GET':
         try:
+            today = date.today()
+            print(today)
             value = checkToken(request)
             if value == 1 :
                 return HttpResponse(status=401)
@@ -480,11 +484,31 @@ def getPartecipanti(request, nomegruppo):
             print("utentiiii", utenti)
             lista_partecipanti = []
             for u in utenti:
-                lista_partecipanti.append({'nome': u.get_username()})
-            json_stuff={'partecipanti': lista_partecipanti}
+               
+                sorso = Sorso.objects.all()
+                print("sorsooo", sorso)
+                trovato = False
+                for s in sorso:
+                    print("SORSO DI", s.utente.get_username())
+                    print("UTENTE BASE", u.get_username())
+                    print(s.giorno)
+                    if s.giorno == today and s.utente.get_username() == u.get_username():
+                         lista_partecipanti.append({'nome': u.get_username(), 'totale': s.totale})
+                         trovato=True
+                if trovato == False:
+                    lista_partecipanti.append({'nome': u.get_username(), 'totale': 0})
+                #print(sorso.totale)
+            newlist = sorted(lista_partecipanti, key=lambda k: k['totale'], reverse=True) 
+            print(newlist)
+                
+            i=1
+            for e in newlist:
+                e["posizione"] = i
+                i=i+1
+            print(newlist)
+            json_stuff={'partecipanti': newlist}
             print("listaaaaaa", json_stuff)
             return JsonResponse(json_stuff)
-
         except:
             return HttpResponse(status=405)
 
