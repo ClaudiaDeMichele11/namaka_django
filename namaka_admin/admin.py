@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import Utente, Borraccia, Sorso , Invito
+from .models import Utente, Borraccia, Sorso , Invito, Vittorie , CodiceSconto
 from django.contrib.auth.admin import UserAdmin as BaseUserAdmin
 from django.contrib.auth.models import User
 from django.contrib.auth.admin import GroupAdmin
@@ -23,6 +23,12 @@ class InvitoAdmin(admin.ModelAdmin):
 
 class SorsoAdmin(admin.ModelAdmin):
     list_display = ( 'id_sorso', 'giorno', 'totale')
+
+class VittoriaAdmin(admin.ModelAdmin):
+    list_display = ( 'codice_vittoria', 'giorno', 'totale', 'gruppo', 'utente')
+
+class CodiceScontoAdmin(admin.ModelAdmin):
+    list_display = ( 'codice_sconto', 'valore', 'stato', 'utente')
 
 class SorsoInLine(admin.StackedInline):
     model = Sorso
@@ -57,4 +63,6 @@ admin.site.register(Borraccia, BorracciaAdmin)
 admin.site.register(Invito, InvitoAdmin)
 #admin.site.register(Utente, UtentAdmin)
 admin.site.register(Sorso, SorsoAdmin)
+admin.site.register(Vittorie, VittoriaAdmin)
 admin.site.register(Group, GenericGroup)
+admin.site.register(CodiceSconto, CodiceScontoAdmin)

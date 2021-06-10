@@ -1,7 +1,7 @@
 from django.conf import Settings
 from django.shortcuts import render
 from django.urls.resolvers import URLResolver
-from namaka_admin.models import Utente, Borraccia, Sorso, Invito
+from namaka_admin.models import CodiceSconto, Utente, Borraccia, Sorso, Invito, Vittorie
 from django.http import HttpResponse
 from django.forms.models import model_to_dict
 import json
@@ -277,35 +277,71 @@ def postTime(request,email_utente):
         except:
             return HttpResponse("Il tempo non esiste")        
 
+
+
+def checkVittoria(email_utente, giorno, nuovototale):
+    membro = User.objects.get(email = email_utente)
+    query_set = Group.objects.filter(user = membro)
+    for g in query_set:
+        vittorie = Vittorie.objects.all()
+        check = False
+        for v in vittorie:
+            if v.giorno == giorno.date() and v.gruppo.name == g.name:
+                if v.totale > nuovototale:
+                    print("Non hai vinto")
+                else:
+                    print("hai vinto")
+                    v.utente = membro
+                    v.totale = nuovototale
+                    v.save()
+                check = True
+        if check != True:
+            print("Non c'è nessuna vittoria")
+            v = Vittorie(utente=membro, giorno=giorno, gruppo=g, totale = nuovototale)
+            v.save()
+    return 1
+
+
+
+
+
+
+
+
+
+
 @csrf_exempt
 def sorsi(request, email_utente, giorno):
-    giorno = datetime.strptime(giorno, '%Y-%m-%d')
+    giorno = datetime.datetime.strptime(giorno, '%Y-%m-%d')
+    print(giorno)
     if request.method == 'POST':
         data = json.loads(request.body)
-        try:
-            sorso = Sorso.objects.all()
-            print("sorsooo", sorso)
-            for s in sorso:
-                if s.giorno == giorno.date() and s.utente.get_username()==email_utente:
-                    s.totale = data['totale']
-                    s.save()
-                    return HttpResponse(status=200)
-            try:
-                utenti=Utente.objects.all()
-                for u in utenti:
-                    print(u.user.get_username())
-                    if(u.user.get_username() == email_utente):  
-                        sorso = Sorso(giorno=giorno.date(), utente=u, totale=data['totale'])
-            except ValueError:
-                print("erroreeeee", ValueError) 
-            try:
-                sorso.save()
+        sorso = Sorso.objects.all()
+        print(sorso)
+        for s in sorso:
+            print(s.giorno)
+            print(giorno.date())
+            print(s.utente.get_username())
+            print(email_utente)
+            if s.giorno == giorno.date() and s.utente.get_username()==email_utente:
+                print(s.totale)
+                var = s.totale
+                print(var)
+                print(type(var))
+                print(data['totale'])
+                print(type(data['totale']))
+                nuovoTotale = var + data['totale']
+                s.totale = nuovoTotale
+                print(s.totale)
+                s.save()
+                checkVittoria(email_utente, giorno, nuovoTotale)
                 return HttpResponse(status=200)
-            except:
-                return HttpResponse(status=405)
-        except:
-            return HttpResponse(status=404)
-    
+        u = User.objects.get(email = email_utente)
+        sorso = Sorso(giorno=giorno.date(), utente=u, totale=data['totale'])
+        sorso.save()
+        checkVittoria(email_utente, giorno,data['totale'])
+        return HttpResponse(status=200)
+           
     if request.method == 'GET':
         try:
             sorso = Sorso.objects.all()
@@ -512,3 +548,79 @@ def getPartecipanti(request, nomegruppo):
         except:
             return HttpResponse(status=405)
 
+def check_codice_sconto(numVittorie,email_utente):
+    if numVittorie > 5:
+        print(numVittorie)
+        print(email_utente)
+        membro = User.objects.get(email = email_utente)
+        codici_sconto = CodiceSconto.objects.filter(utente=membro)
+        print(codici_sconto)
+        numeroSconti = 0
+        n=0
+        for c in codici_sconto:
+            numeroSconti = numeroSconti +1
+        if (5 * numeroSconti) == numVittorie:
+            print("Hai ricevuto tutti gli sconti che potevi")
+            return numeroSconti   
+        else: 
+            sconti_da_ottenere = numVittorie // 5
+            print(sconti_da_ottenere)
+            n =  sconti_da_ottenere - numeroSconti 
+            if n == 0:
+                print("Non hai ancora diritto ad un altro sconto")
+                return sconti_da_ottenere
+            else:
+                print(n)
+                codici_sconto = CodiceSconto.objects.filter(stato="NON ASSEGNATO")
+                print(codici_sconto)
+                for c in codici_sconto:
+                    c.stato = "ASSEGNATO"
+                    c.utente = membro
+                    c.save()
+                    n = n-1
+                    if n == 0:
+                        break
+                print("Hai diritto a un nuovo sconto")  
+                return sconti_da_ottenere   
+    else:
+        print("Non hai diritto a codice sconto")
+        return 0
+
+def vittorie (request,email_utente, gruppo):
+    if request.method == 'GET':
+        giorno = date.today()
+        membro = User.objects.get(email = email_utente)
+        try:
+            vittorie = Vittorie.objects.filter(utente=membro)
+            listavittorie = []
+            for v in vittorie:
+                if(v.giorno != giorno):
+                    print(v.gruppo)
+                    print(v.giorno)
+                    if(v.gruppo.name == gruppo):
+                        vittoria = {"giorno": v.giorno.strftime('%Y-%m-%d')}
+                        listavittorie.append(vittoria)
+            n = check_codice_sconto(len(listavittorie), email_utente)
+            json_stuff={'Listavittorie': listavittorie, 'numeroSconti': n}
+            print("----------", json_stuff)
+            return JsonResponse(json_stuff)
+        except:
+            json_stuff={'Listavittorie': [], 'numeroSconti': n}
+            return JsonResponse(json_stuff)
+
+def sconti(request,email_utente):
+    if request.method == 'GET':
+        membro = User.objects.get(email = email_utente)
+        try:
+            sconti = CodiceSconto.objects.filter(utente=membro)
+            ListaSconti = []
+            for s in sconti:
+                value = {"valore": s.valore, "codice": s.codice_sconto}
+                ListaSconti.append(value)
+            json_stuff={'ListaSconti': ListaSconti}
+            print(json_stuff)
+            return JsonResponse(json_stuff)
+        except:
+            json_stuff={'ListaSconti': []}
+            print(json_stuff)
+            return JsonResponse(json_stuff)

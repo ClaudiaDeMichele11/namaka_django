@@ -27,6 +27,25 @@ class Sorso(models.Model):
     totale = models.IntegerField(default=0)
     utente = models.ForeignKey(User, on_delete=models.CASCADE, default=None)
 
+class Vittorie(models.Model):
+    codice_vittoria = models.AutoField(primary_key=True)
+    giorno = models.DateField(default=None)
+    utente = models.ForeignKey(User, on_delete=models.CASCADE, default=None)
+    gruppo = models.ForeignKey(Group, on_delete=models.CASCADE, null=True)
+    totale = models.IntegerField(default=0)
+
+
+class CodiceSconto(models.Model):
+    class statoSconto(models.TextChoices):
+        ASSEGNATO = 'ASSEGNATO', 
+        NON_ASSEGNATO = 'NON ASSEGNATO', 
+        
+    codice_sconto = models.AutoField(primary_key=True)
+    valore = models.IntegerField(default=25)
+    stato = models.CharField(choices=statoSconto.choices, default=statoSconto.NON_ASSEGNATO, max_length=20)
+    utente = models.ForeignKey(User, on_delete=models.CASCADE, blank=True, null=True)
+
+    
 
 class Invito(models.Model):
     class statoInvito(models.TextChoices):
