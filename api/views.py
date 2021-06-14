@@ -133,7 +133,9 @@ def getInfoBorraccia(request, id_borraccia):
 @csrf_exempt
 def getBorracceUtente(request, email_utente):
     if request.method == 'GET':
-        
+        value = checkToken(request)
+        if value == 1 :
+           return HttpResponse(status=401)
         try:
             utente = User.objects.get(email = email_utente)
         except:
@@ -358,6 +360,9 @@ def getInfoGrafico(request, email_utente, giorno):
     giorno = datetime.datetime.strptime(giorno, '%Y-%m-%d')
     if request.method == 'GET':
         try:
+            value = checkToken(request)
+            if value == 1:
+                return HttpResponse(status=401)
             utenti=Utente.objects.all()
             for u in utenti:
                 print(u.user.get_username())
@@ -367,12 +372,10 @@ def getInfoGrafico(request, email_utente, giorno):
             sorso = Sorso.objects.all()
             for s in sorso:
                 if s.giorno == giorno.date() and s.utente.get_username()==email_utente:
-
                     info = {'info': [{'fabbisogno': fabb, 'totale': s.totale}]}
                     print("info", info)
                     return JsonResponse(info)
             info = {'info': [{'fabbisogno': fabb, 'totale': 0}]}
-
             return JsonResponse(info)            
         except:
             info = {'info': [{'fabbisogno': 0, 'totale': 0}]}
@@ -397,6 +400,9 @@ def getAllPositionBorracce(request, email_utente):
 @csrf_exempt
 def removeBottle(request):
     if request.method == 'POST':
+        value = checkToken(request)
+        if value == 1:
+            return HttpResponse(status=401)
         data = json.loads(request.body)
         print("data", data)
         try:
@@ -456,11 +462,9 @@ def getAllInviti(request, email_utente):
 @csrf_exempt
 def modificaStatoInvito(request, email_utente):
     if request.method == 'POST':
-        """
         value = checkToken(request)
         if value == 1 :
            return HttpResponse(status=401)
-           """
         data = json.loads(request.body)
         try:
             destinatario = User.objects.get(email = email_utente)
@@ -479,9 +483,9 @@ def modificaStatoInvito(request, email_utente):
 @csrf_exempt
 def creaGruppo(request, email_utente):
     if request.method == 'POST':
-        """value = checkToken(request)
+        value = checkToken(request)
         if value == 1 :
-           return HttpResponse(status=401)"""
+           return HttpResponse(status=401)
         data = json.loads(request.body)
         try:
             creatore = User.objects.get(email = email_utente)
