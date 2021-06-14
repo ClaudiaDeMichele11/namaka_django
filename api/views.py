@@ -9,6 +9,7 @@ from django.http import JsonResponse
 from django.core import serializers
 import decimal
 from django.views.decorators.csrf import csrf_exempt
+from django.contrib.auth.password_validation import validate_password
 
 from datetime import datetime
 from rest_framework_simplejwt.tokens import RefreshToken, AccessToken
@@ -157,6 +158,9 @@ def getBorracceUtente(request, email_utente):
         data = json.loads(request.body)
         print(data)
         try:
+            if Borraccia.objects.filter(id_borraccia=data['id']):
+                return HttpResponse(status=403)
+            
             u = User.objects.get(email = email_utente)
             borraccia = Borraccia(id_borraccia=data['id'], lat_borr=float(data['latitudine']), lon_borr=float(data['longitudine']), capacita=data['capacita'], colore = data['colore'], utente=u)
             borraccia.save()
@@ -205,20 +209,24 @@ def registrazioneUtente(request):
             u = User.objects.get(username=data['username'])
             return HttpResponse(status=404)
         except:
-            user = User.objects.create_user(data['username'], email=data['username'], password=data['password'])
-            print("user")
-            fabbisogno = (int(float(data['altezza']))+int(float(data['peso'])))/100
-            utente = Utente(fabbisogno=fabbisogno, user = user)
-            utente.save()
-            refresh = RefreshToken.for_user(user)
-            access = refresh.access_token
-            print("Access token signup", access)
-            print("Refresh token signup", refresh)
-            response = {
-                'refresh': str(refresh),
-                'access': str(access),
-                }
-            return JsonResponse(response)
+            try:
+                validate_password(data['password'])
+                user = User.objects.create_user(data['username'], email=data['username'], password=data['password'])
+                print("user")
+                fabbisogno = (int(float(data['altezza']))+int(float(data['peso'])))/100
+                utente = Utente(fabbisogno=fabbisogno, user = user)
+                utente.save()
+                refresh = RefreshToken.for_user(user)
+                access = refresh.access_token
+                print("Access token signup", access)
+                print("Refresh token signup", refresh)
+                response = {
+                    'refresh': str(refresh),
+                    'access': str(access),
+                    }
+                return JsonResponse(response)
+            except:
+                return HttpResponse(status=405)
 
     
 
