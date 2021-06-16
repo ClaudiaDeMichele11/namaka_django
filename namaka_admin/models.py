@@ -3,12 +3,9 @@ from django.contrib.auth.models import User, Group
 
 class Utente(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE, null=True)
-    #email_utente = models.EmailField(max_length=254, primary_key=True)
     lat_utente = models.DecimalField(max_digits=16, decimal_places=14, null=True)
     lon_utente = models.DecimalField(max_digits=16, decimal_places=14, null=True)
     fabbisogno = models.FloatField()
-    #password = models.CharField(max_length=50, default=None)
-    #borraccia = models.ForeignKey(Borraccia, on_delete=models.CASCADE)
     tempo = models.DateTimeField(default=None, null=True)
 
 

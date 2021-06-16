@@ -156,16 +156,20 @@ def getBorracceUtente(request, email_utente):
         if value == 1 :
            return HttpResponse(status=401) 
         data = json.loads(request.body)
-        print(data)
-        try:
-            if Borraccia.objects.filter(id_borraccia=data['id']):
-                return HttpResponse(status=403)
-            
-            u = User.objects.get(email = email_utente)
-            borraccia = Borraccia(id_borraccia=data['id'], lat_borr=float(data['latitudine']), lon_borr=float(data['longitudine']), capacita=data['capacita'], colore = data['colore'], utente=u)
-            borraccia.save()
-            return HttpResponse(status=200)
-        except:
+        print("body borrraccia", data)
+        #controllare campi
+        if len(data['id']) > 0 and len(data['id']) <=2:
+            try:
+                if Borraccia.objects.filter(id_borraccia=data['id']):
+                    return HttpResponse(status=403)
+                
+                u = User.objects.get(email = email_utente)
+                borraccia = Borraccia(id_borraccia=data['id'], lat_borr=float(data['latitudine']), lon_borr=float(data['longitudine']), capacita=data['capacita'], colore = data['colore'], utente=u)
+                borraccia.save()
+                return HttpResponse(status=200)
+            except:
+                return HttpResponse(status=405)
+        else:
             return HttpResponse(status=405)
 
         
