@@ -42,12 +42,19 @@ def checkToken(request):
 def getInfoUtente(request, email_utente):
     if request.method == 'GET':
         try:
+            value = checkToken(request)
+            if value == 1 :
+                return HttpResponse(status=401)
             utenti=Utente.objects.all()
+            lista_utente = []
             for u in utenti:
                 print(u.user.get_username())
                 if(u.user.get_username() == email_utente):
                     ut = model_to_dict(u)
-                    return JsonResponse(ut)
+                    lista_utente.append(ut)
+                    f={'utente': lista_utente}
+
+                    return JsonResponse(f)    
             return HttpResponse("L'utente inserito non esiste")
         except:
             return HttpResponse("L'utente inserito non esiste")
@@ -103,7 +110,7 @@ def PosUtente(request, email_utente):
         return HttpResponse(status=200)
 
             
-
+@csrf_exempt
 def getFabbUtente(request, email_utente):
     if request.method == 'GET':
         try:
@@ -117,6 +124,23 @@ def getFabbUtente(request, email_utente):
                     return JsonResponse(f)            
         except:
             return HttpResponse("L'utente inserito non esisteeeeee")
+    if request.method == 'POST':
+        try:
+            value = checkToken(request)
+            if value == 1 :
+                return HttpResponse(status=401) 
+            data = json.loads(request.body)
+            print('******',data)
+            u_base = User.objects.get(email=email_utente)
+            print('******',u_base)
+            u = Utente.objects.get(user=u_base)
+            print(u)
+            u.fabbisogno = float(data['fabbisogno'])
+            u.save()
+            return HttpResponse(status=200)             
+        except:
+            return HttpResponse(status=404)    
+
 
             
 
@@ -556,7 +580,6 @@ def getPartecipanti(request, nomegruppo, creatore):
             print("utentiiii", utenti)
             lista_partecipanti = []
             for u in utenti:
-               
                 sorso = Sorso.objects.all()
                 print("sorsooo", sorso)
                 trovato = False
@@ -571,15 +594,29 @@ def getPartecipanti(request, nomegruppo, creatore):
                     lista_partecipanti.append({'nome': u.get_username(), 'totale': 0})
                 #print(sorso.totale)
             newlist = sorted(lista_partecipanti, key=lambda k: k['totale'], reverse=True) 
-            print(newlist)
-                
+            print("--------------",newlist)
+            if len(newlist)==1:
+                print("OKKKK")
+                for e in newlist:
+                    print(e)
+                    e['posizione']=0
+                    json_stuff={'partecipanti': [e]}
+                    print("listaaaaaa*************", json_stuff)
+                    return JsonResponse(json_stuff)
+            
+            if newlist[0]['totale']==0:
+                for e in newlist:
+                    e["posizione"] = 0
+                json_stuff={'partecipanti': newlist}
+                print("listaaaaaa////////////////", json_stuff)
+                return JsonResponse(json_stuff)
             i=1
             for e in newlist:
                 e["posizione"] = i
                 i=i+1
             print(newlist)
             json_stuff={'partecipanti': newlist}
-            print("listaaaaaa", json_stuff)
+            print("listaaaaaa////////////////", json_stuff)
             return JsonResponse(json_stuff)
         except:
             return HttpResponse(status=405)
