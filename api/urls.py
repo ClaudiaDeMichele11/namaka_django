@@ -36,7 +36,7 @@ urlpatterns = [
     path('modificaStatoInvito/<str:email_utente>', views.modificaStatoInvito, name='modificaStatoInvito'),
     path('creaGruppo/<str:email_utente>', views.creaGruppo, name='creaGruppo'),
     path('getGruppoByUtente/<str:email_utente>', views.getGruppoByUtente, name='getGruppoByUtente'),
-    path('getPartecipanti/<str:nomegruppo>', views.getPartecipanti, name='getPartecipanti'),
+    path('getPartecipanti/<str:nomegruppo>/<str:creatore>', views.getPartecipanti, name='getPartecipanti'),
     path('vittorie/<str:email_utente>/<str:gruppo>', views.vittorie, name = 'vittorie'),
     path('sconti/<str:email_utente>', views.sconti, name = 'sconti'),
 ]

@@ -9,6 +9,11 @@ class Utente(models.Model):
     tempo = models.DateTimeField(default=None, null=True)
 
 
+class Gruppo(models.Model):
+    group = models.OneToOneField(Group, on_delete=models.CASCADE, null=True)
+    creatore=models.ForeignKey(User, on_delete=models.CASCADE, default=None)
+    nameGroup = models.CharField(primary_key=True, max_length = 10)
+
 class Borraccia(models.Model):
     
     id_borraccia = models.CharField(primary_key=True, max_length = 2)
@@ -57,4 +62,4 @@ class Invito(models.Model):
     destinatario = models.ForeignKey(User, on_delete=models.CASCADE, default=None, )
     mittente = models.ForeignKey(User, on_delete=models.CASCADE, default=None, related_name='mittente')
     stato = models.CharField(choices=statoInvito.choices, default=statoInvito.NON_VISUALIZZATO, max_length=20)
-    gruppo = models.ForeignKey(Group, on_delete=models.CASCADE, null=True)
+    gruppo = models.ForeignKey(Gruppo, on_delete=models.CASCADE, null=True)

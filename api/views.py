@@ -1,7 +1,7 @@
 from django.conf import Settings
 from django.shortcuts import render
 from django.urls.resolvers import URLResolver
-from namaka_admin.models import CodiceSconto, Utente, Borraccia, Sorso, Invito, Vittorie
+from namaka_admin.models import CodiceSconto, Utente, Borraccia, Sorso, Invito, Vittorie, Gruppo
 from django.http import HttpResponse
 from django.forms.models import model_to_dict
 import json
@@ -439,17 +439,17 @@ def invita(request):
         try:
             mittente = User.objects.get(email = data['mittente'])
             destinatario = User.objects.get(email = data['destinatario'])
-            gruppo = Group.objects.get(name = data['gruppo'])
-            print("ciaooo")
-            
-            invito = Invito.objects.filter(gruppo=gruppo, mittente=mittente, destinatario = destinatario)
-            if len(invito) != 0: 
-                print("aaaaaaaa", invito)
-                return HttpResponse(status=405)
-            else:
-                invito2 = Invito(gruppo=gruppo, mittente=mittente, destinatario = destinatario, stato="NON VISUALIZZATO")
-                invito2.save()
-                return HttpResponse(status=200)
+            #gruppo = Group.objects.get(name = data['gruppo']+data['creatore'])
+            gruppi = Gruppo.objects.filter(nameGroup = data['gruppo'])
+            print(gruppi)
+            for g in gruppi:
+                print(g)
+                print(g.creatore)
+                if g.creatore.get_username()==data['creatore']:
+                    print("HELLO")
+                    invito2 = Invito(gruppo=g, mittente=mittente, destinatario = destinatario, stato="NON VISUALIZZATO")
+                    invito2.save()
+                    return HttpResponse(status=200)
         except:
             return HttpResponse(status=405)
 
@@ -465,8 +465,11 @@ def getAllInviti(request, email_utente):
             if i.destinatario.get_username() == email_utente:
                 invito['mittente']= i.mittente.get_username()
                 invito['destinatario']= i.destinatario.get_username()
-                invito['gruppo'] = i.gruppo.name
+                invito['gruppo']=i.gruppo.nameGroup
+                print(i.gruppo.creatore.get_username())
+                invito['creatore']=i.gruppo.creatore.get_username()
                 invito['stato'] = i.stato
+                print(invito)
                 lista_inviti.append(invito)
         json_stuff={'inviti': lista_inviti}
         return JsonResponse(json_stuff)
@@ -476,18 +479,28 @@ def modificaStatoInvito(request, email_utente):
     if request.method == 'POST':
         value = checkToken(request)
         if value == 1 :
-           return HttpResponse(status=401)
+            print("Problematoken")
+            return HttpResponse(status=401)
         data = json.loads(request.body)
+        print(data)
         try:
+            print(data)
             destinatario = User.objects.get(email = email_utente)
             mittente = User.objects.get(email = data['mittente']) 
-            gruppo = Group.objects.get(name = data['gruppo'])
-            invito = Invito.objects.get(gruppo=gruppo,  mittente=mittente, destinatario = destinatario)
-            invito.stato = data['stato']
-            invito.save()
-            if data['stato'] == "ACCETTATO":
-                gruppo.user_set.add(destinatario)
-            return HttpResponse(status=200)
+            print("HELOOOOOOOOOOOO")
+            nomeUff = data['gruppo']+data['creatore']
+            print(nomeUff)
+            gruppoUff = Group.objects.get(name = nomeUff)
+            print("hello")
+            gruppo = Gruppo.objects.filter(group=gruppoUff)
+            for g in gruppo:
+                invito = Invito.objects.get(gruppo=g,  mittente=mittente, destinatario = destinatario)
+                print(invito)
+                invito.stato = data['stato']
+                invito.save()
+                if data['stato'] == "ACCETTATO":
+                    gruppoUff.user_set.add(destinatario)
+                return HttpResponse(status=200)
         except:
             return HttpResponse(status=405)
 
@@ -501,8 +514,11 @@ def creaGruppo(request, email_utente):
         data = json.loads(request.body)
         try:
             creatore = User.objects.get(email = email_utente)
-            g1 = Group.objects.create(name = data["nomeGruppo"])
+            g1 = Group.objects.create(name=data['nomeGruppo']+email_utente)
+            print("-----------", g1.name)
+            g2 = Gruppo(creatore = creatore, group = g1, nameGroup=data['nomeGruppo'])
             g1.user_set.add(creatore)
+            g2.save()
             return HttpResponse(status=200)
         except:
             return HttpResponse(status=405)
@@ -515,16 +531,20 @@ def getGruppoByUtente(request, email_utente):
                 return HttpResponse(status=401)
             membro = User.objects.get(email = email_utente)
             query_set = Group.objects.filter(user = membro)
+            print(query_set)
             lista_gruppi = []
             for g in query_set:
-                lista_gruppi.append({'nome': g.name})
+                g2 = Gruppo.objects.filter(group=g)
+                print(g2)
+                for v in g2:
+                    lista_gruppi.append({'nome': v.nameGroup, 'creatore':v.creatore.get_username()})
             json_stuff={'gruppi': lista_gruppi}
             return JsonResponse(json_stuff)
         except:
             return HttpResponse(status=405)
 
             
-def getPartecipanti(request, nomegruppo):
+def getPartecipanti(request, nomegruppo, creatore):
     if request.method == 'GET':
         try:
             today = date.today()
@@ -532,7 +552,7 @@ def getPartecipanti(request, nomegruppo):
             value = checkToken(request)
             if value == 1 :
                 return HttpResponse(status=401)
-            utenti = User.objects.filter(groups__name=nomegruppo)
+            utenti = User.objects.filter(groups__name=nomegruppo+creatore)
             print("utentiiii", utenti)
             lista_partecipanti = []
             for u in utenti:
