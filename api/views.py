@@ -459,12 +459,12 @@ def invita(request):
         if value == 1 :
            return HttpResponse(status=401)
         data = json.loads(request.body)
-        print(data)
+        print("--------------",data)
         try:
             mittente = User.objects.get(email = data['mittente'])
             destinatario = User.objects.get(email = data['destinatario'])
-            #gruppo = Group.objects.get(name = data['gruppo']+data['creatore'])
-            gruppi = Gruppo.objects.filter(nameGroup = data['gruppo'])
+            gruppo = Group.objects.get(name = data['gruppo'])
+            gruppi = Gruppo.objects.filter(group=gruppo)
             print(gruppi)
             for g in gruppi:
                 print(g)
