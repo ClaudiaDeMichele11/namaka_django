@@ -40,5 +40,5 @@ urlpatterns = [
     path('getPartecipanti/<str:nomegruppo>/<str:creatore>', views.getPartecipanti, name='getPartecipanti'),
     path('vittorie/<str:email_utente>/<str:gruppo>', views.vittorie, name = 'vittorie'),
     path('sconti/<str:email_utente>', views.sconti, name = 'sconti'),
-
+    path('addCodiciSconto', views.addCodiciSconto, name = 'addCodiciSconto')
 ]

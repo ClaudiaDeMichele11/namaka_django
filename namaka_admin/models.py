@@ -44,7 +44,7 @@ class CodiceSconto(models.Model):
         ASSEGNATO = 'ASSEGNATO', 
         NON_ASSEGNATO = 'NON ASSEGNATO', 
         
-    codice_sconto = models.AutoField(primary_key=True)
+    codice_sconto = models.CharField(primary_key=True, max_length = 8)
     valore = models.IntegerField(default=25)
     stato = models.CharField(choices=statoSconto.choices, default=statoSconto.NON_ASSEGNATO, max_length=20)
     utente = models.ForeignKey(User, on_delete=models.CASCADE, blank=True, null=True)

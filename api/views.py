@@ -720,3 +720,16 @@ def checkInviti(request, email_utente):
                 new_notifiche = new_notifiche+1
         json_stuff={'number': new_notifiche}
         return JsonResponse(json_stuff)
+
+@csrf_exempt
+def addCodiciSconto(request):
+    if request.method == 'POST':
+        data = json.loads(request.body)
+        try:
+            nome_codice = data['nome']
+            value = data['value']
+            c = CodiceSconto(valore=value, codice_sconto=nome_codice)
+            c.save()
+            return HttpResponse(status=200)
+        except:
+            return HttpResponse(status=404)
