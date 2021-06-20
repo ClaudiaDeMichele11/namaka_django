@@ -91,6 +91,7 @@ def PosUtente(request, email_utente):
                     lat = u.lat_utente
                     lon = u.lon_utente
                     pos={'latitudine': lat, 'longitudine': lon}
+                    print(pos)
                     return JsonResponse(pos)
             return HttpResponse("L'utente inserito non esiste")         
         except:
@@ -169,10 +170,12 @@ def getBorracceUtente(request, email_utente):
         lista_borracce = []
         print("Hello")
         for b in borraccia:
-            print(b.utente)
+           
             if b.utente.get_username() == email_utente:
+                print('****',b)
                 lista_borracce.append(model_to_dict(b))
         json_stuff={'borracce': lista_borracce}
+        print(json_stuff)
         return JsonResponse(json_stuff)
 
     if request.method == 'POST':
@@ -284,9 +287,11 @@ def getAllUser(request):
         try:
             lista_utenti=[]
             utente = Utente.objects.all()
-            print(utente)
+            print('aaaaaa',utente)
             for u in utente:
+                print("uuuuuu",u.user.get_username())
                 lista_utenti.append(u.user.get_username())
+            print(lista_utenti)
             return JsonResponse({'lista_utenti': lista_utenti})
         except:
             return HttpResponse("fallito")
@@ -309,11 +314,13 @@ def postTime(request,email_utente):
         try:
             utente = Utente.objects.all()
             for u in utente:
+                print("loooooooooooo--------",u.user.get_username())
                 if(u.user.get_username() == email_utente):
                     tempo = {'tempo': u.tempo}
-                return JsonResponse(tempo)
+                    return JsonResponse(tempo)
         except:
-            return HttpResponse("Il tempo non esiste")        
+            tempo = {'tempo': None}
+            return JsonResponse(tempo)     
 
 
 
@@ -355,13 +362,14 @@ def sorsi(request, email_utente, giorno):
     if request.method == 'POST':
         data = json.loads(request.body)
         sorso = Sorso.objects.all()
-        print(sorso)
+        print("SORSOOOOOO",sorso)
         for s in sorso:
-            print(s.giorno)
-            print(giorno.date())
-            print(s.utente.get_username())
-            print(email_utente)
+            
             if s.giorno == giorno.date() and s.utente.get_username()==email_utente:
+                print(s.giorno)
+                print(giorno.date())
+                print(s.utente.get_username())
+                print(email_utente)
                 print(s.totale)
                 var = s.totale
                 print(var)
@@ -459,7 +467,7 @@ def invita(request):
         if value == 1 :
            return HttpResponse(status=401)
         data = json.loads(request.body)
-        print("--------------",data)
+       
         try:
             mittente = User.objects.get(email = data['mittente'])
             destinatario = User.objects.get(email = data['destinatario'])
@@ -539,7 +547,7 @@ def creaGruppo(request, email_utente):
         try:
             creatore = User.objects.get(email = email_utente)
             g1 = Group.objects.create(name=data['nomeGruppo']+email_utente)
-            print("-----------", g1.name)
+            
             g2 = Gruppo(creatore = creatore, group = g1, nameGroup=data['nomeGruppo'])
             g1.user_set.add(creatore)
             g2.save()
@@ -594,7 +602,7 @@ def getPartecipanti(request, nomegruppo, creatore):
                     lista_partecipanti.append({'nome': u.get_username(), 'totale': 0})
                 #print(sorso.totale)
             newlist = sorted(lista_partecipanti, key=lambda k: k['totale'], reverse=True) 
-            print("--------------",newlist)
+            
             if len(newlist)==1:
                 print("OKKKK")
                 for e in newlist:
@@ -675,7 +683,7 @@ def vittorie (request,email_utente, gruppo):
                         listavittorie.append(vittoria)
             n = check_codice_sconto(len(listavittorie), email_utente)
             json_stuff={'Listavittorie': listavittorie, 'numeroSconti': n}
-            print("----------", json_stuff)
+           
             return JsonResponse(json_stuff)
         except:
             json_stuff={'Listavittorie': [], 'numeroSconti': n}
@@ -697,3 +705,18 @@ def sconti(request,email_utente):
             json_stuff={'ListaSconti': []}
             print(json_stuff)
             return JsonResponse(json_stuff)
+
+def checkInviti(request, email_utente):
+    if request.method == 'GET':
+        value = checkToken(request)
+        if value == 1 :
+           return HttpResponse(status=401)
+        inviti = Invito.objects.all()
+        lista_inviti = []
+        new_notifiche = 0
+        for i in inviti:
+            invito = {}
+            if i.destinatario.get_username() == email_utente and (i.stato=="NON VISUALIZZATO" or i.stato=="VISUALIZZATO"):
+                new_notifiche = new_notifiche+1
+        json_stuff={'number': new_notifiche}
+        return JsonResponse(json_stuff)
